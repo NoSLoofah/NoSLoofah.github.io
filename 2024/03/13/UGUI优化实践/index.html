@@ -1,0 +1,245 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>UGUI优化实践 | 活木雕舟</title><meta name="author" content="NoSLoofah"><meta name="copyright" content="NoSLoofah"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="CBCBCB"><meta name="description" content="上周挂掉腾讯三面的时候被点去好好看看UGUI优化部分的东西，咱一直很听劝，就拿着以前用UGUI做的游戏研究了一下。不看不知道，以前做的UI真是把坑踩完了，一个卡牌仓库连60帧都稳不住，真是让人流汗…下面是优化的完整思路（注：仅针对于减少batches） 优化前这是一个明日方舟同人游戏的卡牌仓库界面，所有卡牌都绘制在一个横向的ScrollView上。我曾将相关纹理打包图集，但并没有做任何其他的优化处">
+<meta property="og:type" content="article">
+<meta property="og:title" content="UGUI优化实践">
+<meta property="og:url" content="http://nosloofah.github.io/2024/03/13/UGUI%E4%BC%98%E5%8C%96%E5%AE%9E%E8%B7%B5/index.html">
+<meta property="og:site_name" content="活木雕舟">
+<meta property="og:description" content="上周挂掉腾讯三面的时候被点去好好看看UGUI优化部分的东西，咱一直很听劝，就拿着以前用UGUI做的游戏研究了一下。不看不知道，以前做的UI真是把坑踩完了，一个卡牌仓库连60帧都稳不住，真是让人流汗…下面是优化的完整思路（注：仅针对于减少batches） 优化前这是一个明日方舟同人游戏的卡牌仓库界面，所有卡牌都绘制在一个横向的ScrollView上。我曾将相关纹理打包图集，但并没有做任何其他的优化处">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://nosloofah.github.io/img/NoSLoofahLOGO1.png">
+<meta property="article:published_time" content="2024-03-13T10:37:35.000Z">
+<meta property="article:modified_time" content="2024-03-13T11:05:52.983Z">
+<meta property="article:author" content="NoSLoofah">
+<meta property="article:tag" content="游戏开发">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="UGUI">
+<meta property="article:tag" content="rebatch">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://nosloofah.github.io/img/NoSLoofahLOGO1.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://nosloofah.github.io/2024/03/13/UGUI%E4%BC%98%E5%8C%96%E5%AE%9E%E8%B7%B5/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"简"},
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'UGUI优化实践',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-03-13 19:05:52'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><script>window.paceOptions = {
+  restartOnPushState: false
+}
+
+document.addEventListener('pjax:send', () => {
+  Pace.restart()
+})
+</script><link rel="stylesheet" href="/%5Ccss%5Ccorner-indicator.css"/><script src="https://cdn.jsdelivr.net/npm/pace-js/pace.min.js"></script><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/NoSLoofahLOGO1.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">11</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/games/"><i class="fa-fw fas fa-gamepad"></i><span> 游戏作品</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('/img/welcomePage.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="活木雕舟"><span class="site-name">活木雕舟</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/games/"><i class="fa-fw fas fa-gamepad"></i><span> 游戏作品</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">UGUI优化实践</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-03-13T10:37:35.000Z" title="发表于 2024-03-13 18:37:35">2024-03-13</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-03-13T11:05:52.983Z" title="更新于 2024-03-13 19:05:52">2024-03-13</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span id="" data-flag-title="UGUI优化实践"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="twikoo_visitors"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p>上周挂掉腾讯三面的时候被点去好好看看UGUI优化部分的东西，咱一直很听劝，就拿着以前用UGUI做的游戏研究了一下。<br>不看不知道，以前做的UI真是把坑踩完了，一个卡牌仓库连60帧都稳不住，真是让人流汗…<br>下面是优化的完整思路（注：仅针对于减少batches）</p>
+<h1 id="优化前"><a href="#优化前" class="headerlink" title="优化前"></a>优化前</h1><p><img src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/202403131903422.png"><br><img src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/202403131903702.png"><br><img src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/202403131903752.png"><br>这是一个明日方舟同人游戏的卡牌仓库界面，所有卡牌都绘制在一个横向的ScrollView上。我曾<strong>将相关纹理打包图集，但并没有做任何其他的优化处理</strong><br>进行此次优化前，<strong>场景绘制的总批次为879，每张卡片占用11Batches，没有发生任何的合批。编辑器运行无法稳定在60FPS。</strong></p>
+<h1 id="优化流程"><a href="#优化流程" class="headerlink" title="优化流程"></a>优化流程</h1><ol>
+<li>将所有可以替换的RawImage替换为Image。这是因为即便使用同一图集的不同纹理，多个RawImage也不会进行合批<ul>
+<li>总批次879 -&gt; 737</li>
+<li>每张卡牌独占10个Batches（每张卡的2个Image进行了合批）<br><img src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/202403131904246.png"><br><img src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/202403131904162.png"></li>
+</ul>
+</li>
+<li>将所有Sprite为空的图像填充上同图集中全白的图像。这是因为即便材质相同，空Sprite图像和有Sprite的图像也不能合批（视作非同图集的纹理）。<ul>
+<li>总批次717 -&gt; 474</li>
+<li>每张卡牌独占6个Batches<br><img src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/202403131904768.png"></li>
+</ul>
+</li>
+<li>用CanvasGroup来管理“未解锁”和解锁卡牌的UI元素。因为即便是被遮挡的元素也会被渲染，造成性能损耗，而通过CanvasGroup设置为透明的元素则不会被渲染。（只要没有勾掉默认开启的Cull Transparent Mesh）<ul>
+<li>总批次474 -&gt; 210</li>
+<li>每张卡牌独占2&#x2F;4个Batches<br><img src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/202403131905123.png"></li>
+</ul>
+</li>
+<li>PosZ置零+移除Rect Mask 2D<ol>
+<li><pre><code>当UGUI元素的z轴不为0时或者旋转角不为90的整数倍时，分批的Bounds检测失效。即视为所有组件重叠在一起，渲染顺序严格按照Hierarchy顺序。该项目设计时单纯靠将加载进来的卡牌的父物体设定为带有Layout组件的物体PosZ不为零，无法合批。故添加一行代码，加载物件时将PosZ置零。
+</code></pre>
+</li>
+<li><pre><code>Mask内的元素可以合批，但是Mask内外的元素不可以。对每一张卡牌都用Mask遮罩导致不同卡牌之间无法合批，应该去除组件。(我在此处找到了不打断合批的Mask解决方案)
+</code></pre>
+</li>
+</ol>
+<ul>
+<li>总批次210 -&gt; 23</li>
+<li>卡牌不再独占Batch</li>
+<li>FPS基本稳定在200以上<br><img src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/202403131905900.png"></li>
+</ul>
+</li>
+<li>对象池动态加载对象。原方案是一次性加载所有卡牌，没有看到的卡牌就直接挂在画面之外。如果只是想减轻渲染压力的话，将画面外的整张卡牌都用CanvasGroup隐藏就行了，但是追求更好性能的话还是要用对象池。（暂未实现）<br><img src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/202403131905348.png"></li>
+</ol>
+<h1 id="相关资料"><a href="#相关资料" class="headerlink" title="相关资料"></a>相关资料</h1><p><a target="_blank" rel="noopener" href="https://github.com/leoin2012/Unity-MeshMask">不打断合批的Mask解决方案</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="http://NoSLoofah.github.io">NoSLoofah</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://nosloofah.github.io/2024/03/13/UGUI%E4%BC%98%E5%8C%96%E5%AE%9E%E8%B7%B5/">http://nosloofah.github.io/2024/03/13/UGUI%E4%BC%98%E5%8C%96%E5%AE%9E%E8%B7%B5/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://NoSLoofah.github.io" target="_blank">活木雕舟</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91/">游戏开发</a><a class="post-meta__tags" href="/tags/Unity/">Unity</a><a class="post-meta__tags" href="/tags/UGUI/">UGUI</a><a class="post-meta__tags" href="/tags/rebatch/">rebatch</a></div><div class="post_share"><div class="social-share" data-image="/img/NoSLoofahLOGO1.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2024/01/15/Unity-%E9%80%9A%E7%94%A8Buff%E7%B3%BB%E7%BB%9F-%E4%B8%8B%E8%BD%BD%E5%92%8C%E6%95%99%E5%AD%A6/" title="Unity 通用Buff系统 下载和教学"><img class="cover" src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/Buff封面.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Unity 通用Buff系统 下载和教学</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2024/01/15/Unity-%E9%80%9A%E7%94%A8Buff%E7%B3%BB%E7%BB%9F-%E4%B8%8B%E8%BD%BD%E5%92%8C%E6%95%99%E5%AD%A6/" title="Unity 通用Buff系统 下载和教学"><img class="cover" src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/Buff封面.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2024-01-15</div><div class="title">Unity 通用Buff系统 下载和教学</div></div></a></div><div><a href="/2023/08/12/Unity%E7%BC%96%E8%BE%91%E5%99%A8%E6%8B%93%E5%B1%95%EF%BC%88%E4%B8%80-%E5%B1%9E%E6%80%A7%E5%AD%97%E6%AE%B5%EF%BC%89/" title="Unity编辑器拓展（一|属性&#x2F;字段）"><img class="cover" src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/title1.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-08-12</div><div class="title">Unity编辑器拓展（一|属性&#x2F;字段）</div></div></a></div><div><a href="/2023/08/15/Unity%E7%BC%96%E8%BE%91%E5%99%A8%E6%8B%93%E5%B1%95%EF%BC%88%E4%B8%89-%E7%AA%97%E5%8F%A3%E7%BB%98%E5%88%B6%EF%BC%89/" title="Unity编辑器拓展（三|窗口绘制）"><img class="cover" src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/editor3.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-08-15</div><div class="title">Unity编辑器拓展（三|窗口绘制）</div></div></a></div><div><a href="/2023/08/14/Unity%E7%BC%96%E8%BE%91%E5%99%A8%E6%8B%93%E5%B1%95%EF%BC%88%E4%BA%8C-%E7%BB%84%E4%BB%B6%E7%BB%98%E5%88%B6%EF%BC%89/" title="Unity编辑器拓展（二|组件绘制）"><img class="cover" src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/editor2.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-08-14</div><div class="title">Unity编辑器拓展（二|组件绘制）</div></div></a></div><div><a href="/2023/08/29/Unity%E7%BC%96%E8%BE%91%E5%99%A8%E6%8B%93%E5%B1%95%EF%BC%88%E5%9B%9B-%E5%9C%BA%E6%99%AF%E8%A7%86%E5%9B%BE%EF%BC%89/" title="Unity编辑器拓展（四|场景视图）"><img class="cover" src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/editor4.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-08-29</div><div class="title">Unity编辑器拓展（四|场景视图）</div></div></a></div><div><a href="/2023/08/12/Unity%E7%BC%96%E8%BE%91%E5%99%A8%E6%8B%93%E5%B1%95%EF%BC%88%E9%9B%B6-%E6%A6%82%E8%BF%B0%EF%BC%89/" title="Unity编辑器拓展（零|概述）"><img class="cover" src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/title0.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-08-12</div><div class="title">Unity编辑器拓展（零|概述）</div></div></a></div></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="twikoo-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/NoSLoofahLOGO1.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">NoSLoofah</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">11</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/NoSLoofah"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/NoSLoofah" target="_blank" title="Github"><i class="fab fa-github" style="color: #EF6138;"></i></a><a class="social-icon" href="https://space.bilibili.com/1753539878" target="_blank" title="Bilibili"><i class="fab fa-bilibili" style="color: #EF6138;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">Unity我阐释你的梦！！！</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BC%98%E5%8C%96%E5%89%8D"><span class="toc-number">1.</span> <span class="toc-text">优化前</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BC%98%E5%8C%96%E6%B5%81%E7%A8%8B"><span class="toc-number">2.</span> <span class="toc-text">优化流程</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%9B%B8%E5%85%B3%E8%B5%84%E6%96%99"><span class="toc-number">3.</span> <span class="toc-text">相关资料</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/03/13/UGUI%E4%BC%98%E5%8C%96%E5%AE%9E%E8%B7%B5/" title="UGUI优化实践">UGUI优化实践</a><time datetime="2024-03-13T10:37:35.000Z" title="发表于 2024-03-13 18:37:35">2024-03-13</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2024/01/15/Unity-%E9%80%9A%E7%94%A8Buff%E7%B3%BB%E7%BB%9F-%E4%B8%8B%E8%BD%BD%E5%92%8C%E6%95%99%E5%AD%A6/" title="Unity 通用Buff系统 下载和教学"><img src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/Buff封面.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Unity 通用Buff系统 下载和教学"/></a><div class="content"><a class="title" href="/2024/01/15/Unity-%E9%80%9A%E7%94%A8Buff%E7%B3%BB%E7%BB%9F-%E4%B8%8B%E8%BD%BD%E5%92%8C%E6%95%99%E5%AD%A6/" title="Unity 通用Buff系统 下载和教学">Unity 通用Buff系统 下载和教学</a><time datetime="2024-01-15T01:49:56.000Z" title="发表于 2024-01-15 09:49:56">2024-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/12/17/Ubuntu-SMBus-Host-controller-not-enabled-%E6%97%A0%E6%B3%95%E8%BF%9B%E5%85%A5%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2/" title="【哈工大软件构造中间件实验】Ubuntu SMBus Host controller not enabled/ 循环登陆界面"><img src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/鲨鱼劳大.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="【哈工大软件构造中间件实验】Ubuntu SMBus Host controller not enabled/ 循环登陆界面"/></a><div class="content"><a class="title" href="/2023/12/17/Ubuntu-SMBus-Host-controller-not-enabled-%E6%97%A0%E6%B3%95%E8%BF%9B%E5%85%A5%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2/" title="【哈工大软件构造中间件实验】Ubuntu SMBus Host controller not enabled/ 循环登陆界面">【哈工大软件构造中间件实验】Ubuntu SMBus Host controller not enabled/ 循环登陆界面</a><time datetime="2023-12-17T02:10:04.000Z" title="发表于 2023-12-17 10:10:04">2023-12-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/09/24/%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84%E9%80%9A%E7%94%A8%E5%AE%9E%E4%BD%93%E8%AE%BE%E8%AE%A1%E6%80%9D%E8%B7%AF/" title="一个简单的通用实体设计思路"><img src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/ynsj.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="一个简单的通用实体设计思路"/></a><div class="content"><a class="title" href="/2023/09/24/%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84%E9%80%9A%E7%94%A8%E5%AE%9E%E4%BD%93%E8%AE%BE%E8%AE%A1%E6%80%9D%E8%B7%AF/" title="一个简单的通用实体设计思路">一个简单的通用实体设计思路</a><time datetime="2023-09-24T02:32:26.000Z" title="发表于 2023-09-24 10:32:26">2023-09-24</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/09/16/%E6%B8%B8%E6%88%8F%E8%AE%BE%E8%AE%A1-%E7%AB%8B%E9%A1%B9%E6%97%B6%E7%9A%84%E5%B0%8F%E7%BB%8F%E9%AA%8C/" title="游戏设计-立项时的小经验"><img src="https://raw.githubusercontent.com/NoSLoofah/Blog-Picture-Bed/master/Cache_253951c04fcc0100.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="游戏设计-立项时的小经验"/></a><div class="content"><a class="title" href="/2023/09/16/%E6%B8%B8%E6%88%8F%E8%AE%BE%E8%AE%A1-%E7%AB%8B%E9%A1%B9%E6%97%B6%E7%9A%84%E5%B0%8F%E7%BB%8F%E9%AA%8C/" title="游戏设计-立项时的小经验">游戏设计-立项时的小经验</a><time datetime="2023-09-16T11:57:26.000Z" title="发表于 2023-09-16 19:57:26">2023-09-16</time></div></div></div></div></div></div></main><footer id="footer" style="background: #383838"><div id="footer-wrap"><div class="copyright">&copy;2023 - 2024 By NoSLoofah</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="直达评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"><script>(()=>{
+  const init = () => {
+    twikoo.init(Object.assign({
+      el: '#twikoo-wrap',
+      envId: 'https://twikoo.nosloofah.top',
+      region: '',
+      onCommentLoaded: function () {
+        btf.loadLightbox(document.querySelectorAll('#twikoo .tk-content img:not(.tk-owo-emotion)'))
+      }
+    }, null))
+  }
+
+  const getCount = () => {
+    const countELement = document.getElementById('twikoo-count')
+    if(!countELement) return
+    twikoo.getCommentsCount({
+      envId: 'https://twikoo.nosloofah.top',
+      region: '',
+      urls: [window.location.pathname],
+      includeReply: false
+    }).then(function (res) {
+      countELement.textContent = res[0].count
+    }).catch(function (err) {
+      console.error(err);
+    });
+  }
+
+  const runFn = () => {
+    init()
+    
+  }
+
+  const loadTwikoo = () => {
+    if (typeof twikoo === 'object') {
+      setTimeout(runFn,0)
+      return
+    } 
+    getScript('https://cdn.jsdelivr.net/npm/twikoo/dist/twikoo.all.min.js').then(runFn)
+  }
+
+  if ('Twikoo' === 'Twikoo' || !false) {
+    if (false) btf.loadComment(document.getElementById('twikoo-wrap'), loadTwikoo)
+    else loadTwikoo()
+  } else {
+    window.loadOtherComment = () => {
+      loadTwikoo()
+    }
+  }
+})()</script></div><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-nest.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = false;
+document.body.addEventListener('input', POWERMODE);
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
