@@ -154,24 +154,24 @@ document.addEventListener('pjax:send', () => {
   Pace.restart()
 })
 </script><link rel="stylesheet" href="/%5Ccss%5Ccorner-indicator.css"/><script src="https://cdn.jsdelivr.net/npm/pace-js/pace.min.js"></script><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/NoSLoofahLOGO1.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">13</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">14</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/games/"><i class="fa-fw fas fa-gamepad"></i><span> 游戏作品</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://cdn.jsdelivr.net/gh/NoSLoofah/Blog-Picture-Bed/鲨鱼劳大.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="活木雕舟"><span class="site-name">活木雕舟</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/games/"><i class="fa-fw fas fa-gamepad"></i><span> 游戏作品</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">【哈工大软件构造中间件实验】Ubuntu SMBus Host controller not enabled/ 循环登陆界面</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-12-17T02:10:04.000Z" title="发表于 2023-12-17 10:10:04">2023-12-17</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-03-13T11:39:45.198Z" title="更新于 2024-03-13 19:39:45">2024-03-13</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span id="" data-flag-title="【哈工大软件构造中间件实验】Ubuntu SMBus Host controller not enabled/ 循环登陆界面"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="twikoo_visitors"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="问题情景"><a href="#问题情景" class="headerlink" title="问题情景"></a>问题情景</h1><p>Ubuntu开机时卡在<code>SMBus Host controller not enabled!</code>，继续等待后，进入登陆界面。输入密码，黑屏一段时间后又回到登陆界面<br><img src="https://cdn.jsdelivr.net/gh/NoSLoofah/Blog-Picture-Bed/QQ%E6%88%AA%E5%9B%BE20231217101749.png" alt="情况"></p>
-<h1 id="问题原因"><a href="#问题原因" class="headerlink" title="问题原因"></a>问题原因</h1><p>由于发生问题前Ubuntu是意外断电关机的，所以我最开始也是按相关关键词搜索的。查询到的诸如禁用报错模块、检查驱动、fsck等均不可行。<br>经过排查，发现我遇到的问题实际上是<strong>修改环境变量</strong>导致的。<br>特征：使用各种终端命令都会出现下面的提示<br><img src="https://cdn.jsdelivr.net/gh/NoSLoofah/Blog-Picture-Bed/QQ%E6%88%AA%E5%9B%BE20231217102510.png"></p>
+<h1 id="问题原因"><a href="#问题原因" class="headerlink" title="问题原因"></a>问题原因</h1><p>由于发生问题前Ubuntu是意外断电关机的，所以我最开始也是按相关关键词搜索的。查询到的诸如禁用报错模块、检查驱动、fsck等均不可行。<br>经过排查，发现我遇到的问题实际上是<strong>修改环境变量</strong>导致的。<br>特征：使用各种终端命令都会出现下面的提示<br><img src="https://cdn.jsdelivr.net/gh/NoSLoofah/Blog-Picture-Bed/QQ%E6%88%AA%E5%9B%BE20231217102510.png" alt=""></p>
 <h1 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h1><ol>
-<li>进入登陆界面后，用快捷键<code>Ctrl+Alt+F2</code>进入命令行模式。（修复模式下的root应该也可行）<br><img src="https://cdn.jsdelivr.net/gh/NoSLoofah/Blog-Picture-Bed/QQ%E6%88%AA%E5%9B%BE20231217101749.png" alt="情况"><br><img src="https://cdn.jsdelivr.net/gh/NoSLoofah/Blog-Picture-Bed/20231217102725.png"></li>
-<li>修改&#x2F;etc&#x2F;profile文件，改正错误的环境变量<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/bin/sudo vi /etc/profile</span><br></pre></td></tr></table></figure>
-（由于环境变量出了问题，必须用绝对路径才能用sudo等命令）<br><img src="https://cdn.jsdelivr.net/gh/NoSLoofah/Blog-Picture-Bed/20231217104819.png"><br>问题就出在红色标记的地方，PATH丢了两个重要的路径。（这是我按照老师的实验指导书改的，真不靠谱啊…）<blockquote>
+<li>进入登陆界面后，用快捷键<code>Ctrl+Alt+F2</code>进入命令行模式。（修复模式下的root应该也可行）<br><img src="https://cdn.jsdelivr.net/gh/NoSLoofah/Blog-Picture-Bed/QQ%E6%88%AA%E5%9B%BE20231217101749.png" alt="情况"><br><img src="https://cdn.jsdelivr.net/gh/NoSLoofah/Blog-Picture-Bed/20231217102725.png" alt=""></li>
+<li>修改/etc/profile文件，改正错误的环境变量<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/bin/sudo vi /etc/profile</span><br></pre></td></tr></table></figure>
+（由于环境变量出了问题，必须用绝对路径才能用sudo等命令）<br><img src="https://cdn.jsdelivr.net/gh/NoSLoofah/Blog-Picture-Bed/20231217104819.png" alt=""><br>问题就出在红色标记的地方，PATH丢了两个重要的路径。（这是我按照老师的实验指导书改的，真不靠谱啊…）<blockquote>
 <p>环境变量的多个值之间用冒号:分隔。</p>
 </blockquote>
 </li>
 </ol>
 <p>在后面补上四个路径即可</p>
 <ul>
-<li>&#x2F;bin</li>
-<li>&#x2F;usr&#x2F;bin</li>
-<li>&#x2F;sbin</li>
-<li>&#x2F;usr&#x2F;sbin</li>
+<li>/bin</li>
+<li>/usr/bin</li>
+<li>/sbin</li>
+<li>/usr/sbin</li>
 </ul>
-<p><img src="https://cdn.jsdelivr.net/gh/NoSLoofah/Blog-Picture-Bed/20231217105948.png"></p>
-<ol start="3">
+<p><img src="https://cdn.jsdelivr.net/gh/NoSLoofah/Blog-Picture-Bed/20231217105948.png" alt=""></p>
+<ol>
 <li>执行profile文件，让修改环境变量生效<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">source /etc/profile</span><br></pre></td></tr></table></figure></li>
 <li>用reboot指令重启</li>
 </ol>
